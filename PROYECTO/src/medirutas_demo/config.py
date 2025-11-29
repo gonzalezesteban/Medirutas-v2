@@ -1,8 +1,6 @@
 # config.py
-"""
-Configuración central de la demo Medirutas.
-Este archivo permite centralizar rutas y ajustes globales.
-"""
+#Configuración central de la demo Medirutas.
+#Este archivo permite centralizar rutas y ajustes globales.
 
 import os
 

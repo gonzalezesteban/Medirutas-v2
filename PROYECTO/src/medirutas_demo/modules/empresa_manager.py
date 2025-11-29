@@ -1,4 +1,8 @@
-from database import get_db
+#IGNORAR! -> AUN EN DESARROLLO / NO RELEVANTE POR EL MOMENTO -> Solo tenemos 1 empresa, esto es pa +1
+
+
+
+from database import get_db # Conectar con base de datos
 
 class EmpresaManager:
     def __init__(self):

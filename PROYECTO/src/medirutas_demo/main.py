@@ -5,39 +5,36 @@ Entry point para la demo Medirutas (Tkinter).
 Este main importa la inicialización de la base (database.py).
 """
 
-import os
-import json
-from datetime import datetime, date
-import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
-from PIL import Image, ImageTk, ImageOps
+import os #manejo de rutas y directorios
+import json #manejo de permisos en JSON
+from datetime import datetime, date #fechas y horas
+import tkinter as tk #interfaz gráfica
+from tkinter import ttk, filedialog, messagebox #adiciones de diseño
+from PIL import Image, ImageTk, ImageOps #manejar imágenes
 
 # importa funciones de database.py
 from database import get_db_conn, init_db, BASE_DIR
 
 # directorios assets/uploads
-ASSETS_DIR = os.path.join(BASE_DIR, "assets")
-UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
-os.makedirs(ASSETS_DIR, exist_ok=True)
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+ASSETS_DIR = os.path.join(BASE_DIR, "assets") #para logos, iconos
+UPLOAD_DIR = os.path.join(BASE_DIR, "uploads") #para archivos subidos
+os.makedirs(ASSETS_DIR, exist_ok=True) #asegurarse que existen
+os.makedirs(UPLOAD_DIR, exist_ok=True) #asegurarse que existen
 
-# Inicializar la DB (crea tablas y admin por defecto)
+# Inicializar (crear tablas y admin por defecto)
 init_db()
 
 # ---------- Resto del código de la UI ----------
-# Para mantener el flujo y la compatibilidad con lo que ya definiste,
-# a continuación incluyo la implementación principal de la UI dentro
-# del mismo main.py (esencialmente la versión simplificada que ya aprobaste).
 
-import sqlite3
+import sqlite3 #base de datos
 
-def get_conn():
+def get_conn(): #conectar la base de datos
     return get_db_conn()
 
-class App:
-    def __init__(self, root):
+class App: 
+    def __init__(self, root): #inicializar la app
         self.root = root
-        root.title("Medirutas - Demo")
+        root.title("Medirutas - Demo") #de aqui para abajo es el diseño
         root.geometry("1100x700")
         # Left panel (fixed lateral panel that acts as sliding panel)
         self.left_panel = tk.Frame(root, width=260, bg="#f0f0f0")
@@ -75,12 +72,12 @@ class App:
         self.form_area.grid(row=2, column=0, columnspan=2, pady=10)
         self._render_auth_form()
 
-    def _render_auth_form(self):
+    def _render_auth_form(self): #formulario login/registro
         for w in self.form_area.winfo_children():
             w.destroy()
         mode = self.auth_mode.get()
         if mode == "login":
-            tk.Label(self.form_area, text="Código de empresa").grid(row=0, column=0, sticky="e")
+            tk.Label(self.form_area, text="Código de empresa").grid(row=0, column=0, sticky="e") #diseño del formulario de login
             self.login_company = tk.Entry(self.form_area); self.login_company.grid(row=0, column=1)
             tk.Label(self.form_area, text="Nombre usuario").grid(row=1, column=0, sticky="e")
             self.login_name = tk.Entry(self.form_area); self.login_name.grid(row=1, column=1)
@@ -89,7 +86,7 @@ class App:
             tk.Button(self.form_area, text="Iniciar sesión", command=self._do_login, width=20).grid(row=3, column=0, columnspan=2, pady=8)
             tk.Label(self.form_area, text="(Para demo: empresa 0000, usuario admin_lider, pass 0000)").grid(row=4, column=0, columnspan=2, pady=(6,0))
         else:
-            tk.Label(self.form_area, text="Código de empresa").grid(row=0, column=0, sticky="e")
+            tk.Label(self.form_area, text="Código de empresa").grid(row=0, column=0, sticky="e") #diseño del formulario de registro
             self.reg_company = tk.Entry(self.form_area); self.reg_company.grid(row=0, column=1)
             tk.Label(self.form_area, text="Código de rol").grid(row=1, column=0, sticky="e")
             self.reg_role = tk.Entry(self.form_area); self.reg_role.grid(row=1, column=1)
@@ -102,19 +99,19 @@ class App:
             tk.Button(self.form_area, text="Crear cuenta", command=self._do_register, width=20).grid(row=5, column=0, columnspan=2, pady=8)
             tk.Label(self.form_area, text="(La primera cuenta creada con company code 0000 y role code 0000 es Admin Líder)").grid(row=6, column=0, columnspan=2, pady=(6,0))
 
-    def _do_login(self):
+    def _do_login(self): #parte lógica del login
         company_code = self.login_company.get().strip(); name = self.login_name.get().strip(); password = self.login_pass.get()
-        if not (company_code and name and password):
+        if not (company_code and name and password): #si esta incompleto
             messagebox.showerror("Error", "Complete todos los campos"); return
         c = self.conn.cursor()
         c.execute("SELECT id FROM companies WHERE code = ?", (company_code,))
         comp = c.fetchone()
-        if not comp:
+        if not comp: #Codigo de la empresa incorrecto
             messagebox.showerror("Error", "Código de empresa inválido"); return
         comp_id = comp["id"]
         c.execute("SELECT * FROM users WHERE company_id = ? AND name = ? AND password = ?", (comp_id, name, password))
         user = c.fetchone()
-        if not user:
+        if not user: #cuando las credenciales (usuario/contraseña) son inválidas
             messagebox.showerror("Error", "Credenciales inválidas"); return
         c.execute("SELECT is_admin FROM roles WHERE id = ?", (user["role_id"],))
         role = c.fetchone()
@@ -122,23 +119,23 @@ class App:
         self.current_user = {"id": user["id"], "name": user["name"], "company_id": user["company_id"], "company_code": company_code, "role_id": user["role_id"], "is_admin": is_admin}
         self.build_main_ui()
 
-    def _do_register(self):
+    def _do_register(self): #parte lógica del registro
         company_code = self.reg_company.get().strip(); role_code = self.reg_role.get().strip()
         name = self.reg_name.get().strip(); p1 = self.reg_pass.get(); p2 = self.reg_pass2.get()
-        if not (company_code and role_code and name and p1 and p2):
+        if not (company_code and role_code and name and p1 and p2): #si esta incompleto
             messagebox.showerror("Error", "Complete todos los campos"); return
-        if p1 != p2:
+        if p1 != p2: #si las contraseñas no coinciden
             messagebox.showerror("Error", "Contraseñas no coinciden"); return
         c = self.conn.cursor()
         c.execute("SELECT id FROM companies WHERE code = ?", (company_code,))
         comp = c.fetchone()
-        if not comp:
+        if not comp: #si el codigo de la empresa es incorrecto
             messagebox.showerror("Error", "Código de empresa inválido"); return
         comp_id = comp["id"]
         
         # Verificar si es la primera cuenta (company_code 0000 y role_code 0000)
         # Si es así, crear el rol si no existe
-        if company_code == "0000" and role_code == "0000":
+        if company_code == "0000" and role_code == "0000": #Admin líder
             c.execute("SELECT id FROM roles WHERE company_id = ? AND code = ?", (comp_id, role_code))
             role = c.fetchone()
             if not role:
@@ -147,12 +144,12 @@ class App:
                          (comp_id, "Admin Líder", "0000", 1))
                 self.conn.commit()
                 role_id = c.lastrowid
-            else:
+            else: #ya existe el rol
                 role_id = role["id"]
-        else:
+        else: #Para otros roles
             c.execute("SELECT id FROM roles WHERE company_id = ? AND code = ?", (comp_id, role_code))
             role = c.fetchone()
-            if not role:
+            if not role: #si el codigo de rol es incorrecto
                 messagebox.showerror("Error", "Código de rol inválido"); return
             role_id = role["id"]
         
@@ -162,7 +159,7 @@ class App:
             messagebox.showerror("Error", "El nombre de usuario ya existe"); return
         
         now = datetime.utcnow().isoformat()
-        try:
+        try: #crear el usuario
             c.execute("INSERT INTO users (company_id, role_id, name, password, created_at) VALUES (?,?,?,?,?)", (comp_id, role_id, name, p1, now))
             self.conn.commit()
             messagebox.showinfo("Listo", "Cuenta creada correctamente. Inicie sesión.")
@@ -170,21 +167,21 @@ class App:
         except sqlite3.IntegrityError as e:
             messagebox.showerror("Error", f"No se pudo crear usuario: {e}")
 
-    # main UI after login
+    # Construir la UI despues del login
     def build_main_ui(self):
-        # rebuild left panel with menu
-        for w in self.left_panel.winfo_children():
+        # agregar botones al panel lateral según el rol
+        for w in self.left_panel.winfo_children(): #limpiar/cambiar el panel
             w.destroy()
         logo_path = os.path.join(ASSETS_DIR, "logo.png")
-        if os.path.exists(logo_path):
+        if os.path.exists(logo_path): #agregar logo
             img = Image.open(logo_path); img = img.resize((220,80)); self.logo_img = ImageTk.PhotoImage(img)
             tk.Label(self.left_panel, image=self.logo_img, bg="#f0f0f0").pack(pady=10)
-        else:
+        else: #por si no carga el logo
             tk.Label(self.left_panel, text="Medirutas", bg="#f0f0f0", font=("Arial", 18, "bold")).pack(pady=20)
         tk.Label(self.left_panel, text=f"Usuario: {self.current_user['name']}", bg="#f0f0f0").pack(pady=(0,10))
 
-        menu_items = [("Inicio", self.win_inicio)]
-        if self.current_user["is_admin"]:
+        menu_items = [("Inicio", self.win_inicio)] #botones
+        if self.current_user["is_admin"]: #si es admin
             # Verificar si es admin líder (tiene todos los permisos)
             c = self.conn.cursor()
             c.execute("SELECT code FROM roles WHERE id = ?", (self.current_user["role_id"],))
@@ -214,7 +211,7 @@ class App:
                     except:
                         pass
                 
-                # Mapeo de permisos a funciones
+                # De permisos a funciones
                 perm_map = {
                     "Crear rutas": self.win_crear_rutas,
                     "Cuentas de cobro": self.win_cuentas_cobro,
@@ -229,17 +226,17 @@ class App:
                 for perm in permissions:
                     if perm in perm_map:
                         menu_items.append((perm, perm_map[perm]))
-        else:
+        else: #si es conductor
             menu_items += [
                 ("Horario", self.win_horario),
                 ("Cuentas de cobro", self.win_cuentas_cobro)
             ]
-        for (label, cmd) in menu_items:
+        for (label, cmd) in menu_items: #crear botones
             btn = tk.Button(self.left_panel, text=label, width=24, command=cmd); btn.pack(pady=4)
         tk.Button(self.left_panel, text="Cerrar sesión", width=24, fg="red", command=self._logout).pack(side="bottom", pady=10)
         self.win_inicio()
 
-    def _logout(self):
+    def _logout(self): #cerrar sesión
         self.current_user = None
         for w in self.left_panel.winfo_children(): w.destroy()
         tk.Label(self.left_panel, text="Medirutas", bg="#f0f0f0", font=("Arial", 18, "bold")).pack(pady=20)
@@ -247,12 +244,7 @@ class App:
         for w in self.main_frame.winfo_children(): w.destroy()
         self.build_auth_ui()
 
-    # The rest of the window functions (inicio, crear_rutas, crear_servicios, etc.)
-    # are intentionally identical to the ones approved previously. For brevity here,
-    # I include only inicio and a minimal placeholder for others. If prefieres,
-    # te doy el main.py completo con todas las funciones sin truncar.
-
-    def win_inicio(self):
+    def win_inicio(self): #diseño del inicio
         for w in self.main_frame.winfo_children(): w.destroy()
         frm = tk.Frame(self.main_frame, padx=10, pady=10); frm.pack(fill="both", expand=True)
         tk.Label(frm, text="Inicio", font=("Arial",16)).pack(anchor="nw")
@@ -268,13 +260,13 @@ class App:
             left = tk.Frame(content); left.pack(side="left", fill="both", expand=True)
             right = tk.Frame(content, width=420); right.pack(side="right", fill="y")
             logo_path = os.path.join(ASSETS_DIR, "logo.png")
-            if os.path.exists(logo_path):
+            if os.path.exists(logo_path): #agregar logo
                 img = Image.open(logo_path).resize((300,120)); imgtk = ImageTk.PhotoImage(img); tk.Label(left, image=imgtk).pack(); self._logo_imgtk = imgtk
             tk.Label(left, text="Slogan de la App", font=("Arial",12)).pack()
             map_path = os.path.join(ASSETS_DIR, "map_placeholder.png")
-            if os.path.exists(map_path):
+            if os.path.exists(map_path): #poner el mapa (en este momento puse una imagen)
                 mimg = Image.open(map_path).resize((400,300)); self._map_imgtk = ImageTk.PhotoImage(mimg); tk.Label(right, image=self._map_imgtk).pack()
-            else:
+            else: #por si no nos carga el mapa
                 tk.Label(right, text="[mapa estático aquí]", width=50, height=15, bg="#ddd").pack()
             bottom = tk.Frame(frm); bottom.pack(fill="both", expand=True)
             leftb = tk.Frame(bottom); leftb.pack(side="left", fill="both", expand=True)
@@ -282,10 +274,10 @@ class App:
             tree = ttk.Treeview(leftb, columns=("route","address"), show="headings"); tree.heading("route", text="Ruta ID"); tree.heading("address", text="Dirección"); tree.pack(fill="both", expand=True)
             c = self.conn.cursor(); today = date.today().isoformat()
             c.execute("SELECT id FROM routes WHERE company_id = ? AND date = ?", (self.current_user["company_id"], today))
-            for r in c.fetchall():
+            for r in c.fetchall(): #una tabla con las rutas de hoy
                 rid = r["id"]
                 c2 = self.conn.cursor(); c2.execute("SELECT address FROM stops WHERE route_id = ? ORDER BY order_index", (rid,))
-                for s in c2.fetchall():
+                for s in c2.fetchall(): #agregar las paradas
                     tree.insert("", "end", values=(rid, s["address"]))
             tk.Label(leftb, text="(Use el panel lateral para navegar)").pack(anchor="e", pady=4)
         else:
@@ -299,7 +291,7 @@ class App:
                       (self.current_user["company_id"], self.current_user["id"], today))
             route = c.fetchone()
             
-            if route:
+            if route: #si hay ruta asignada
                 tk.Label(info_frame, text=f"Ubicación de inicio: {route['start_location']}", font=("Arial", 12)).pack(anchor="w")
                 tk.Label(info_frame, text=f"Hora de inicio: {route['start_time']}", font=("Arial", 12)).pack(anchor="w")
                 
@@ -310,13 +302,13 @@ class App:
                 has_final = c.fetchone() is not None
                 
                 btn_frame = tk.Frame(top_frame); btn_frame.pack(side="right", padx=10)
-                if not has_inicio:
+                if not has_inicio: #botones para formularios
                     tk.Button(btn_frame, text="Realizar Formulario de Inicio", command=self._form_inicio, width=25, height=2).pack(pady=5)
                 elif not has_final:
                     tk.Button(btn_frame, text="Realizar Formulario Final", command=self._form_fin, width=25, height=2, bg="#4CAF50", fg="white").pack(pady=5)
-                else:
+                else: #si ya completó ambos formularios
                     tk.Label(btn_frame, text="Ruta completada", font=("Arial", 12), fg="green").pack(pady=5)
-            else:
+            else: #si no hay ruta asignada
                 tk.Label(info_frame, text="No hay rutas asignadas para hoy", font=("Arial", 12)).pack(anchor="w")
             
             # Direcciones y mapa
@@ -327,28 +319,28 @@ class App:
             tk.Label(left, text="Direcciones de las paradas de hoy", font=("Arial",12,"bold")).pack(anchor="w")
             dir_list = tk.Listbox(left, height=10); dir_list.pack(fill="both", expand=True)
             
-            if route:
+            if route: #llenar las direcciones
                 c.execute("SELECT address FROM stops WHERE route_id = ? ORDER BY order_index", (route["id"],))
-                for s in c.fetchall():
+                for s in c.fetchall(): #agregar las paradas
                     dir_list.insert(tk.END, s["address"])
             
             map_path = os.path.join(ASSETS_DIR, "map_placeholder.png")
-            if os.path.exists(map_path):
+            if os.path.exists(map_path): #mapa
                 mimg = Image.open(map_path).resize((400,300)); self._map_imgtk = ImageTk.PhotoImage(mimg); tk.Label(right, image=self._map_imgtk).pack()
             else:
                 tk.Label(right, text="[mapa estático aquí]", width=50, height=15, bg="#ddd").pack()
     
-    def _form_inicio(self):
+    def _form_inicio(self):# abrir formulario de inicio
         from ui.conductor.window_form_inicio import FormInicioWindow
         FormInicioWindow(self.current_user["company_code"], self.current_user["id"], self.conn, self.win_inicio)
     
-    def _form_fin(self):
+    def _form_fin(self): # abror formulario final
         from ui.conductor.window_form_fin import FormFinWindow
         FormFinWindow(self.current_user["company_code"], self.current_user["id"], self.conn, self.win_inicio)
 
-    def _search_conductor(self):
+    def _search_conductor(self): #buscar conductores
         q = self.search_var.get().strip()
-        if not q:
+        if not q: 
             messagebox.showinfo("Buscar", "Ingrese texto para buscar"); return
         c = self.conn.cursor()
         c.execute("SELECT id, name FROM users WHERE company_id = ? AND name LIKE ?", (self.current_user["company_id"], f"%{q}%"))
@@ -359,46 +351,47 @@ class App:
         messagebox.showinfo("Conductores encontrados", txt)
 
     # Importar módulos y ventanas
-    def win_crear_rutas(self):
+    def win_crear_rutas(self): #ventana "crear rutas"
         from ui.admin.window_crear_ruta import CrearRutaWindow
         CrearRutaWindow(self.current_user["company_code"], self.current_user["id"], self.conn)
     
-    def win_crear_servicios(self):
+    def win_crear_servicios(self):# ventana "crear servicios"
         from ui.admin.window_crear_servicios import CrearServiciosWindow
         CrearServiciosWindow(self.current_user["company_code"], self.conn)
     
-    def win_crear_codigos(self):
+    def win_crear_codigos(self):# ventana "crear códigos"
         from ui.admin.window_crear_codigos import CrearCodigosWindow
         CrearCodigosWindow(self.current_user["company_code"], self.current_user["id"], self.conn)
     
-    def win_lista_usuarios(self):
+    def win_lista_usuarios(self):# ventana "lista de usuarios"
         from ui.admin.window_lista_usuarios import ListaUsuariosWindow
         ListaUsuariosWindow(self.current_user["company_code"], self.conn)
     
-    def win_permisos(self):
+    def win_permisos(self): # ventana "permisos"
         from ui.admin.window_permisos import PermisosWindow
         PermisosWindow(self.current_user["company_code"], self.current_user["id"], self.conn)
     
-    def win_reportar(self):
+    def win_reportar(self): # ventana "reportar problema"
         from ui.admin.window_reportar_problema import ReportarProblemaWindow
         ReportarProblemaWindow(self.current_user["company_code"], self.current_user["id"], self.conn)
     
-    def win_documentos(self):
+    def win_documentos(self): # ventana "documentos"
         from ui.admin.window_documentos import DocumentosWindow
         DocumentosWindow(self.current_user["company_code"], self.conn)
     
-    def win_cuentas_cobro(self):
+    def win_cuentas_cobro(self): # ventana "cuentas de cobro"
         if self.current_user["is_admin"]:
             from ui.admin.window_cuentas_cobro import CuentasCobroWindow
             CuentasCobroWindow(self.current_user["company_code"], self.conn)
-        else:
+        else: # conductor
             from ui.conductor.window_cuentas_cobro_conductor import CuentasCobroConductorWindow
             CuentasCobroConductorWindow(self.current_user["company_code"], self.current_user["id"], self.conn)
     
-    def win_horario(self):
+    def win_horario(self): # ventana "horario" (para conductores)
         from ui.conductor.window_horario import HorarioConductorWindow
         HorarioConductorWindow(self.current_user["company_code"], self.current_user["id"], self.conn)
 
+# para ejecutar la app
 def main():
     root = tk.Tk()
     app = App(root)

@@ -3,10 +3,10 @@ import os
 import sqlite3
 from datetime import datetime
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "medirutas.db")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__)) # esto es para saber el directorio en el que esta (src/medirutas_demo)
+DB_PATH = os.path.join(BASE_DIR, "medirutas.db") # llamar la base de datos
 
-def get_db_conn():
+def get_db_conn(): # conectar la base de datos
     """
     Devuelve una conexión sqlite3 con row_factory configurada.
     """
@@ -14,7 +14,7 @@ def get_db_conn():
     conn.row_factory = sqlite3.Row
     return conn
 
-def init_db():
+def init_db(): # inicializar la base de datos
     """
     Crea las tablas necesarias y garantiza la existencia de la
     company/role/admin líder por defecto (códigos 0000).
@@ -114,29 +114,29 @@ def init_db():
     except:
         pass  # La columna ya existe
 
-    # Ensure default company + admin lider exist (company code 0000, role code 0000, user admin_lider/password 0000)
+    # por defecto: (company code 0000, role code 0000, user admin_lider/password 0000)
     c.execute("SELECT id FROM companies WHERE code = ?", ("0000",))
     comp = c.fetchone()
-    if not comp:
+    if not comp: # si no existe la compañia
         c.execute("INSERT INTO companies (name, code) VALUES (?, ?)", ("Empresa Inicial", "0000"))
         conn.commit()
         comp_id = c.lastrowid
-    else:
+    else: # si si existe
         comp_id = comp["id"]
 
     c.execute("SELECT id FROM roles WHERE company_id = ? AND code = ?", (comp_id, "0000"))
     role = c.fetchone()
-    if not role:
+    if not role: # si no existe el rol
         c.execute("INSERT INTO roles (company_id, name, code, is_admin) VALUES (?, ?, ?, ?)",
                   (comp_id, "Admin Líder", "0000", 1))
         conn.commit()
         role_id = c.lastrowid
-    else:
+    else: # si si existe
         role_id = role["id"]
 
     c.execute("SELECT id FROM users WHERE company_id = ? AND role_id = ?", (comp_id, role_id))
     user = c.fetchone()
-    if not user:
+    if not user: # si no existe el usuario
         now = datetime.utcnow().isoformat()
         c.execute("INSERT INTO users (company_id, role_id, name, password, created_at) VALUES (?, ?, ?, ?, ?)",
                   (comp_id, role_id, "admin_lider", "0000", now))
@@ -144,7 +144,7 @@ def init_db():
 
     conn.close()
 
-# Ejecutar init_db si este módulo se importa directamente (práctico en dev)
+# Ejecutar init_db
 if __name__ == "__main__":
     init_db()
     print(f"Base de datos inicializada en: {DB_PATH}")
