@@ -1,9 +1,7 @@
 # main.py
 #!/usr/bin/env python3
-"""
-Entry point para la demo Medirutas (Tkinter).
-Este main importa la inicialización de la base (database.py).
-"""
+#Entry point para la demo Medirutas (Tkinter).
+#Este main importa la inicialización de la base (database.py).
 
 import os #manejo de rutas y directorios
 import json #manejo de permisos en JSON
