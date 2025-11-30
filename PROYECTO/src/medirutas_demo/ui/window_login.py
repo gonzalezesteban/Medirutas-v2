@@ -5,7 +5,7 @@ from window_home_admin import HomeAdminWindow
 from window_home_conductor import HomeConductorWindow
 from window_register import RegisterWindow
 
-class LoginWindow:
+class LoginWindow: # Ventana de inicio de sesión
     def __init__(self):
         self.db = Database()
 
@@ -32,7 +32,7 @@ class LoginWindow:
 
         self.root.mainloop()
 
-    def login(self):
+    def login(self): # Proceso inicio de sesión
         cod_empresa = self.entry_empresa.get()
         user = self.entry_usuario.get()
         pwd = self.entry_contra.get()
